@@ -59,6 +59,7 @@ $(HOST_OBJDIR)/.stamp-configure-host: | $(HOST_OBJDIR)
 
 # Parameters:
 #  $(1): filter file name (without .json suffix)
+#  $(2): data output file name
 define TargetBuildTemplate
 
 $(TARGET_OBJDIR)/$(1):
@@ -86,14 +87,18 @@ lib-$(1): data-$(1)
 # run data build and copy data file to bin dir
 data-$(1): $(TARGET_OBJDIR)/$(1)/.stamp-configure | $(TARGET_OBJDIR)/$(1) $(TARGET_BINDIR)
 	cd $(TARGET_OBJDIR)/$(1) && $(MAKE) -C data all && $(MAKE) -C data install
-	cp $(TARGET_OBJDIR)/$(1)/data/out/icudt*.dat $(TARGET_BINDIR)/$(1).dat
+	cp $(TARGET_OBJDIR)/$(1)/data/out/icudt*.dat $(TARGET_BINDIR)/$(2)
 
 endef
 
-$(eval $(call TargetBuildTemplate,icudt))
-$(eval $(call TargetBuildTemplate,icudt_CJK))
-$(eval $(call TargetBuildTemplate,icudt_no_CJK))
-$(eval $(call TargetBuildTemplate,icudt_EFIGS))
+ifeq ($(TARGET_OS),browser)
+$(eval $(call TargetBuildTemplate,icudt_browser,icudt.dat))
+else
+$(eval $(call TargetBuildTemplate,icudt_mobile,icudt.dat))
+endif
+$(eval $(call TargetBuildTemplate,icudt_CJK,icudt_CJK.dat))
+$(eval $(call TargetBuildTemplate,icudt_no_CJK,icudt_no_CJK.dat))
+$(eval $(call TargetBuildTemplate,icudt_EFIGS,icudt_EFIGS.dat))
 
 # build source+data for the main "icudt" filter and only data for the other filters
 all: lib-icudt data-icudt data-icudt_no_CJK data-icudt_EFIGS data-icudt_CJK
